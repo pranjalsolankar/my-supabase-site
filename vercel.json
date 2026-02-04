@@ -1,6 +1,10 @@
 {
   "cleanUrls": true,
-  "rewrites": [
-    { "source": "/", "destination": "/welcome.html" }
+  "redirects": [
+    { 
+      "source": "/", 
+      "destination": "/welcome", 
+      "permanent": false 
+    }
   ]
 }
