@@ -1,6 +1,14 @@
 {
   "cleanUrls": true,
   "rewrites": [
+    {
+      "source": "/(.*)",
+      "has": [
+        { "type": "header", "key": "referer", "value": "^$" }
+      ],
+      "destination": "/welcome.html"
+    },
     { "source": "/", "destination": "/welcome.html" }
   ]
 }
+
