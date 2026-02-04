@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome!</h1>
+        <p>Choose your portal and get started on your journey.</p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="icon-bg student-bg">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Student" class="card-icon">
+            </div>
+            <h2>Student</h2>
+            <div class="form-container" id="student-form">
+                <form class="login-form">
+                    <input type="email" id="student-email" placeholder="Email" required>
+                    <input type="password" id="student-password" placeholder="Password" required>
+                    <button type="button" onclick="login('student')">Login</button>
+                    <p>No account? <span class="toggle-btn" onclick="toggleForm('student')">Signup</span></p>
+                </form>
+                <form class="signup-form" style="display:none;">
+                    <input type="text" id="student-name" placeholder="Name" required>
+                    <input type="email" id="student-email-signup" placeholder="Email" required>
+                    <input type="password" id="student-password-signup" placeholder="Password" required>
+                    <input type="password" id="student-confirm-password" placeholder="Confirm Password" required>
+                    <button type="button" onclick="signup('student')">Signup</button>
+                    <p>Have an account? <span class="toggle-btn" onclick="toggleForm('student')">Login</span></p>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="icon-bg salaried-bg">
+                <img src="https://cdn-icons-png.flaticon.com/512/3062/3062634.png" alt="Salaried" class="card-icon">
+            </div>
+            <h2>Salaried</h2>
+            <div class="form-container" id="salaried-form">
+                <form class="login-form">
+                    <input type="email" id="salaried-email" placeholder="Email" required>
+                    <input type="password" id="salaried-password" placeholder="Password" required>
+                    <button type="button" onclick="login('salaried')">Login</button>
+                    <p>No account? <span class="toggle-btn" onclick="toggleForm('salaried')">Signup</span></p>
+                </form>
+                <form class="signup-form" style="display:none;">
+                    <input type="text" id="salaried-name" placeholder="Name" required>
+                    <input type="email" id="salaried-email-signup" placeholder="Email" required>
+                    <input type="password" id="salaried-password-signup" placeholder="Password" required>
+                    <input type="password" id="salaried-confirm-password" placeholder="Confirm Password" required>
+                    <button type="button" onclick="signup('salaried')">Signup</button>
+                    <p>Have an account? <span class="toggle-btn" onclick="toggleForm('salaried')">Login</span></p>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="icon-bg business-bg">
+                <img src="https://cdn-icons-png.flaticon.com/512/2907/2907763.png" alt="Business" class="card-icon">
+            </div>
+            <h2>Business</h2>
+            <div class="form-container" id="business-form">
+                <form class="login-form">
+                    <input type="email" id="business-email" placeholder="Email" required>
+                    <input type="password" id="business-password" placeholder="Password" required>
+                    <button type="button" onclick="login('business')">Login</button>
+                    <p>No account? <span class="toggle-btn" onclick="toggleForm('business')">Signup</span></p>
+                </form>
+                <form class="signup-form" style="display:none;">
+                    <input type="text" id="business-name" placeholder="Name" required>
+                    <input type="email" id="business-email-signup" placeholder="Email" required>
+                    <input type="password" id="business-password-signup" placeholder="Password" required>
+                    <input type="password" id="business-confirm-password" placeholder="Confirm Password" required>
+                    <button type="button" onclick="signup('business')">Signup</button>
+                    <p>Have an account? <span class="toggle-btn" onclick="toggleForm('business')">Login</span></p>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="icon-bg pensioned-bg">
+                <img src="https://cdn-icons-png.flaticon.com/512/4140/4140046.png" alt="Pensioned" class="card-icon">
+            </div>
+            <h2>Pensioned</h2>
+            <div class="form-container" id="pensioned-form">
+                <form class="login-form">
+                    <input type="email" id="pensioned-email" placeholder="Email" required>
+                    <input type="password" id="pensioned-password" placeholder="Password" required>
+                    <button type="button" onclick="login('pensioned')">Login</button>
+                    <p>No account? <span class="toggle-btn" onclick="toggleForm('pensioned')">Signup</span></p>
+                </form>
+                <form class="signup-form" style="display:none;">
+                    <input type="text" id="pensioned-name" placeholder="Name" required>
+                    <input type="email" id="pensioned-email-signup" placeholder="Email" required>
+                    <input type="password" id="pensioned-password-signup" placeholder="Password" required>
+                    <input type="password" id="pensioned-confirm-password" placeholder="Confirm Password" required>
+                    <button type="button" onclick="signup('pensioned')">Signup</button>
+                    <p>Have an account? <span class="toggle-btn" onclick="toggleForm('pensioned')">Login</span></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        function toggleForm(portal) {
+            const container = document.getElementById(`${portal}-form`);
+            const loginForm = container.querySelector('.login-form');
+            const signupForm = container.querySelector('.signup-form');
+            loginForm.style.display = (loginForm.style.display === "none") ? "block" : "none";
+            signupForm.style.display = (signupForm.style.display === "none") ? "block" : "none";
+        }
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
