@@ -1,0 +1,434 @@
+/* =========================
+   GLOBAL STYLES
+========================= */
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fb; /* dashboard light background */
+    color: #1e293b;       /* main text color */
+    margin: 0;
+    padding: 20px;
+}
+
+/* =========================
+   HEADER / WELCOME
+========================= */
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.header h1 {
+    color: #1e293b; /* dark navy */
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.header p {
+    font-size: 18px;
+    color: #64748b; /* muted secondary text */
+}
+
+/* =========================
+   CONTAINER: LOGIN / CARDS
+========================= */
+.container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    max-width: 1100px;
+    margin: auto;
+}
+
+@media (max-width: 700px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================
+   CARD STYLING
+========================= */
+.card, .dash-card {
+    background: #ffffff; 
+    border-radius: 10px;
+    padding: 25px 20px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.card:hover, .dash-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+}
+
+/* =========================
+   ICONS
+========================= */
+.icon-bg {
+    width: 60px;   /* smaller circle */
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.icon-bg:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* Card Icon sizes */
+.card-icon {
+    width: 35px;
+    height: 35px;
+}
+
+/* Card Titles & Text */
+.card h2, .dash-card h3 {
+    color: #1e293b;
+    margin-bottom: 10px;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.card p, .dash-card .muted {
+    color: #64748b; /* muted secondary text */
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+/* =========================
+   INPUTS
+========================= */
+.card input, .dash-card input, .section input {
+    width: 90%;
+    padding: 12px 10px;
+    margin: 8px 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+.card button, .btn-primary, .btn-dark, .section button {
+    background: #1e293b;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.card button:hover, .btn-primary:hover, .btn-dark:hover, .section button:hover {
+    background: #334155;
+}
+
+/* Toggle Login/Signup */
+.toggle-btn {
+    color: #1e293b;
+    cursor: pointer;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+/* =========================
+   STUDENT / TRACKER SECTIONS
+========================= */
+.tracker-container, .dashboard-grid {
+    max-width: 1100px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+}
+
+@media (max-width: 700px) {
+    .tracker-container, .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.section {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.section h2 {
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+#income-list, #goals-list {
+    margin: 10px 0;
+}
+
+/* =========================
+   NEGATIVE / WARNING AMOUNTS
+========================= */
+.negative, .summary .red {
+    color: #dc2626; /* soft red */
+}
+
+/* =========================
+   LOGOUT / CENTER BUTTON
+========================= */
+.logout-section, .center-btn {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.logout-section button, .center-btn .large {
+    background: #1e293b;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.logout-section button:hover, .center-btn .large:hover {
+    background: #334155;
+}
+
+/* =========================
+   REMAINING BOX
+========================= */
+.remaining-box {
+    background: #f1f5f9;
+    padding: 18px;
+    border-radius: 6px;
+    font-size: 24px;
+    margin: 10px 0;
+}
+
+/* SUMMARY LAYOUT */
+.summary div {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+}
+
+
+/* ===== DASHBOARD ===== */
+.dashboard-body {
+  background: #f5f7fb;
+  font-family: "Segoe UI", sans-serif;
+  margin: 0;
+}
+
+/* NAV */
+.top-nav {
+  background: #ffffff;
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 20px;
+  color: #1e293b;
+}
+
+.nav-links button {
+  background: none;
+  border: none;
+  font-size: 15px;
+  margin-left: 15px;
+  cursor: pointer;
+  color: #334155;
+}
+
+.nav-links .active {
+  background: #1e293b;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 6px;
+}
+
+/* TITLE */
+.page-title {
+  margin: 30px;
+  font-size: 28px;
+  color: #1e293b;
+}
+
+/* GRID */
+.dashboard-grid {
+  max-width: 1100px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 25px;
+}
+
+/* CARDS */
+.dash-card {
+  background: #ffffff;
+  padding: 22px;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.dash-card h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #1e293b;
+}
+
+.muted {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.dash-card input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+}
+
+/* BUTTONS */
+.btn-primary {
+  background: #1e293b;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-dark {
+  width: 100%;
+  margin-top: 12px;
+  background: #1e293b;
+  color: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+}
+
+.inline {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* REMAINING */
+.remaining-box {
+  background: #f1f5f9;
+  padding: 18px;
+  border-radius: 6px;
+  font-size: 24px;
+  margin: 10px 0;
+}
+
+.summary div {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.summary .red {
+  color: #dc2626;
+}
+
+/* CENTER BUTTON */
+.center-btn {
+  margin: 40px 0;
+  text-align: center;
+}
+
+.large {
+  font-size: 16px;
+  padding: 14px 28px;
+}
+/* ✅ FIX INPUT NOT TYPING ISSUE */
+.dash-card,
+.dash-card * {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+input, button {
+  pointer-events: auto;
+  z-index: 2;
+}
+:root {
+    --primary: #4834d4;
+    --red: #ff4757;
+    --dark: #2f3542;
+    --gray: #f1f2f6;
+}
+
+body { font-family: 'Segoe UI', sans-serif; background: #f8f9fa; margin: 0; }
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Force 2 columns */
+    gap: 25px;
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.dash-card {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    height: auto; /* Card grows with content */
+    min-height: 250px;
+}
+
+.input-group { display: flex; gap: 8px; margin: 15px 0; }
+input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; }
+
+.expense-item {
+    display: flex;
+    justify-content: space-between;
+    background: var(--gray);
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+}
+
+#expenseList { max-height: 200px; overflow-y: auto; }
+
+.del-btn { background: none; border: none; color: var(--red); cursor: pointer; font-weight: bold; }
+
+.remaining-box {
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 20px 0;
+    color: var(--dark);
+}
+
+.btn-calculate {
+    background: var(--dark);
+    color: white;
+    padding: 15px 40px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.center-btn { text-align: center; margin-top: 30px; }
+.text-red { color: var(--red); }

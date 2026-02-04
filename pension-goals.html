@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Retirement Goals</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+<nav class="top-nav">
+    <div class="logo">👵 ElderBudget</div>
+    <div class="nav-links">
+        <button onclick="window.location.href='pension.html'">Dashboard</button>
+        <button class="active">Goals</button>
+        <button onclick="handleLogout()" class="btn-logout">Logout</button>
+    </div>
+</nav>
+
+<h1 class="page-title">Retirement Financial Goals</h1>
+
+<div class="dashboard-grid">
+    <div class="dash-card">
+        <h3>💰 Available Money</h3>
+        <h2 id="availableMoneyDisplay">₹0.00</h2>
+        <p class="muted">Surplus from your pension after medical & living costs.</p>
+    </div>
+
+    <div class="dash-card">
+        <h3>🎯 Create New Goal</h3>
+        <input type="text" id="goalName" placeholder="Goal Name">
+        <input type="number" id="goalAmount" placeholder="Target Amount">
+        <input type="number" id="useAmount" placeholder="Amount to save now">
+        <button class="btn-primary" onclick="handleGoalSubmit()">Set Goal</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const supabaseClient = supabase.createClient("URL", "KEY");
+    let currentAvailable = 0;
+
+    window.onload = async () => {
+        // Fix for "Please login first" error
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) { alert("Please login first"); window.location.href = "index.html"; return; }
+        await refreshData();
+    };
+
+    async function refreshData() {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        const { data: profile } = await supabaseClient.from("profiles").select("*").eq("id", user.id).single();
+        const { data: expenses } = await supabaseClient.from("expenses").select("amount").eq("user_id", user.id);
+        
+        const totalExp = expenses?.reduce((sum, e) => sum + Number(e.amount), 0) || 0;
+        currentAvailable = (profile.monthly_income || 0) - (profile.emergency_budget || 0) - totalExp;
+        document.getElementById("availableMoneyDisplay").textContent = `₹${currentAvailable.toFixed(2)}`;
+    }
+
+    async function handleGoalSubmit() {
+        const saveNow = parseFloat(document.getElementById("useAmount").value) || 0;
+        if (saveNow > currentAvailable) return alert("Insufficient available money!");
+        // Logic to insert into goals table...
+        alert("Goal Set!");
+        await refreshData();
+    }
+</script>
+</body>
+</html>
+
+
+
+
+

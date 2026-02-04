@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Salaried Goals</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+<nav class="top-nav">
+    <div class="logo">💳 BudgetTracker</div>
+    <div class="nav-links">
+        <button onclick="window.location.href='salaried.html'">Dashboard</button>
+        <button class="active">Goals</button>
+        <button onclick="handleLogout()" class="btn-logout">Logout</button>
+    </div>
+</nav>
+
+<div class="dashboard-grid">
+    <div class="dash-card">
+        <h3>💰 Available Money</h3>
+        <h2 id="availableMoneyDisplay">₹0.00</h2>
+        <p class="muted">Surplus from your salary after expenses & reserves.</p>
+    </div>
+
+    <div class="dash-card">
+        <h3>🎯 Create New Goal</h3>
+        <input type="text" id="goalName" placeholder="Goal Name">
+        <input type="number" id="goalAmount" placeholder="Target Amount">
+        <input type="number" id="useAmount" placeholder="Amount to save now">
+        <button class="btn-primary" onclick="handleGoalSubmit()">Set Goal</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = "https://gutdjwkuphmlrljxskgz.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_AroUizfnqDDW9YUfxWyE3A_XMfys25o";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentAvailable = 0;
+
+    window.onload = async () => {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) { window.location.href = "index.html"; return; }
+        await refreshData();
+    };
+
+    async function refreshData() {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        
+        // 1. Fetch Profile (Salary & Emergency)
+        const { data: profile } = await supabaseClient.from("profiles").select("*").eq("id", user.id).single();
+        // 2. Fetch Expenses
+        const { data: expenses } = await supabaseClient.from("expenses").select("amount").eq("user_id", user.id);
+        // 3. Fetch ALREADY saved money in other goals
+        const { data: goals } = await supabaseClient.from("goals").select("saved").eq("user_id", user.id);
+
+        const income = Number(profile?.monthly_income || 0);
+        const emergency = Number(profile?.emergency_budget || 0);
+        const totalExp = expenses?.reduce((sum, e) => sum + Number(e.amount || 0), 0) || 0;
+        const totalAlreadySaved = goals?.reduce((sum, g) => sum + Number(g.saved || 0), 0) || 0;
+
+        // CORRECT CALCULATION: Income - Emergency - Expenses - Already Saved
+        currentAvailable = income - emergency - totalExp - totalAlreadySaved;
+        
+        document.getElementById("availableMoneyDisplay").textContent = `₹${currentAvailable.toFixed(2)}`;
+    }
+
+    async function handleGoalSubmit() {
+        const name = document.getElementById("goalName").value.trim();
+        const target = parseFloat(document.getElementById("goalAmount").value) || 0;
+        const saveNow = parseFloat(document.getElementById("useAmount").value) || 0;
+
+        if (saveNow > currentAvailable) {
+            alert("Calculation Error: You cannot save more than your available disposable income!");
+            return;
+        }
+
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        await supabaseClient.from("goals").insert([{
+            user_id: user.id, name: name, target: target, saved: saveNow, portal: "salaried"
+        }]);
+
+        await refreshData();
+        alert("Goal set successfully!");
+    }
+</script>
+</body>
+</html>
+
+

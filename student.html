@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Dashboard</title>
+    <style>
+        body { background: #f8f9fa; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .top-nav { background: white; padding: 15px 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-btn { border: none; background: none; cursor: pointer; font-size: 1rem; padding: 8px 15px; border-radius: 8px; transition: 0.3s; }
+        .nav-btn.active { background: #2c3e50; color: white; font-weight: bold; }
+        .nav-btn:not(.active) { color: #666; }
+        .nav-btn:hover:not(.active) { background: #f1f2f6; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 40px; max-width: 1300px; margin: auto; }
+        .dash-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
+        input { width: 100%; padding: 15px; margin: 15px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 1rem; }
+        .btn-dark { width: 100%; background: #2c3e50; color: white; padding: 18px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; }
+        .money-display { font-size: 3.5rem; font-weight: 800; color: #2c3e50; margin: 20px 0; background: #f1f2f6; padding: 30px; border-radius: 15px; min-height: 100px; display: flex; align-items: center; justify-content: center; }
+        .money-display.is-neg { color: #2c3e50 !important; }
+        .vault-amt { font-size: 2.5rem; font-weight: bold; margin-bottom: 10px; }
+        .btn-green { background: #2c3e50; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: bold; }
+        .btn-orange { background: #2c3e50; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; flex: 1; font-weight: bold; }
+        .expense-item { display: flex; justify-content: space-between; padding: 12px; background: #f1f2f6; border-radius: 10px; margin-top: 10px; text-align: left; align-items: center; }
+        .del-btn { color: #2c3e50; cursor: pointer; font-weight: bold; font-size: 1.2rem; margin-left: 15px; border: none; background: none; }
+    </style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div style="font-size: 1.5rem;">🎓 <b>StudentBudget</b></div>
+    <div class="nav-links">
+        <button class="nav-btn active">Dashboard</button>
+        <button class="nav-btn" onclick="window.location.href='student-goals.html'">Goals</button>
+    </div>
+</nav>
+
+<div class="dashboard-grid">
+    <div class="dash-card">
+        <h3>💰 Monthly Allowance</h3>
+        <input type="number" id="monthlyIncome" placeholder="Enter total allowance">
+    </div>
+
+    <div class="dash-card">
+        <h3>🚨 Emergency Vault</h3>
+        <div class="vault-amt" id="vaultDisplay">₹0.00</div>
+        <input type="number" id="vaultInput" placeholder="Amount">
+        <div style="display:flex; gap:15px;">
+            <button class="btn-green" onclick="updateVault('deposit')">Deposit</button>
+            <button class="btn-orange" onclick="updateVault('withdraw')">Withdraw</button>
+        </div>
+    </div>
+
+    <div class="dash-card">
+        <h3>🧾 Expenses</h3>
+        <input type="text" id="expName" placeholder="Item Name">
+        <input type="number" id="expAmt" placeholder="₹ Amount">
+        <button class="btn-dark" style="padding:12px;" onclick="addExpense()">Add Expense</button>
+        <div id="expenseList"></div>
+    </div>
+
+    <div class="dash-card">
+        <h3>💰 Remaining Money</h3>
+        <div class="money-display" id="remainingDisplay">₹0.00</div>
+        <button class="btn-dark" onclick="calculateAndSave()">Calculate & Save Balance</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = "https://gutdjwkuphmlrljxskgz.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_AroUizfnqDDW9YUfxWyE3A_XMfys25o";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentVault = 0;
+    let expenseData = [];
+
+    window.onload = async () => {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
+
+        const [prof, exps] = await Promise.all([
+            supabaseClient.from("profiles").select("*").eq("id", user.id).maybeSingle(),
+            supabaseClient.from("expenses").select("*").eq("user_id", user.id)
+        ]);
+
+        if (prof.data) {
+            document.getElementById('monthlyIncome').value = prof.data.monthly_income || "";
+            currentVault = Number(prof.data.emergency_budget) || 0;
+            document.getElementById('vaultDisplay').textContent = `₹${currentVault.toFixed(2)}`;
+            updateRemainingUI(Number(prof.data.final_balance) || 0);
+        }
+        expenseData = exps.data || [];
+        renderExpenses();
+    };
+
+    async function calculateAndSave() {
+        const inc = Number(document.getElementById('monthlyIncome').value) || 0;
+        const totalExp = expenseData.reduce((sum, e) => sum + Number(e.amount), 0);
+        const final = inc - totalExp - currentVault;
+        updateRemainingUI(final);
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        await supabaseClient.from("profiles").upsert({ id: user.id, monthly_income: inc, emergency_budget: currentVault, final_balance: final });
+        alert("Saved Successfully!");
+    }
+
+    function updateRemainingUI(val) {
+        const disp = document.getElementById('remainingDisplay');
+        disp.textContent = `₹${val.toFixed(2)}`;
+        disp.className = val < 0 ? "money-display is-neg" : "money-display";
+    }
+
+    async function updateVault(type) {
+        const val = Number(document.getElementById('vaultInput').value) || 0;
+        if (val <= 0) return;
+        currentVault = (type === 'deposit') ? currentVault + val : currentVault - val;
+        document.getElementById('vaultDisplay').textContent = `₹${currentVault.toFixed(2)}`;
+        document.getElementById('vaultInput').value = "";
+    }
+
+    async function addExpense() {
+        const n = document.getElementById('expName').value;
+        const a = Number(document.getElementById('expAmt').value);
+        if (!n || !a) return;
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        const { data } = await supabaseClient.from("expenses").insert([{ user_id: user.id, name: n, amount: a }]).select();
+        if (data) {
+            expenseData.push(data[0]);
+            renderExpenses();
+            document.getElementById('expName').value = "";
+            document.getElementById('expAmt').value = "";
+        }
+    }
+
+    async function deleteExpense(id) {
+        await supabaseClient.from("expenses").delete().eq("id", id);
+        expenseData = expenseData.filter(e => e.id !== id);
+        renderExpenses();
+    }
+
+    function renderExpenses() {
+        document.getElementById('expenseList').innerHTML = expenseData.map(e => `
+            <div class="expense-item">
+                <span>${e.name}</span>
+                <span>₹${Number(e.amount).toFixed(2)} <button class="del-btn" onclick="deleteExpense('${e.id}')">✕</button></span>
+            </div>
+        `).join('');
+    }
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+

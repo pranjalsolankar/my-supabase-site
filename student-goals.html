@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Goals</title>
+    <style>
+        body { background: #f8f9fa; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .top-nav { background: white; padding: 15px 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-btn { border: none; background: none; cursor: pointer; font-size: 1rem; padding: 8px 15px; border-radius: 8px; transition: 0.3s; }
+        .nav-btn.active { background: #2c3e50; color: white; font-weight: bold; }
+        .nav-btn:not(.active) { color: #666; }
+        .nav-btn:hover:not(.active) { background: #f1f2f6; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 40px; max-width: 1300px; margin: auto; }
+        .dash-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
+        .available-amt { font-size: 3.5rem; font-weight: 800; color: #2c3e50; margin: 20px 0; background: #f1f2f6; padding: 30px; border-radius: 15px; }
+        .available-amt.is-neg { color: #2c3e50 !important; }
+        
+        .goals-container { max-width: 900px; margin: auto; padding: 0 40px 40px 40px; }
+        
+        .goal-row { background: white; padding: 25px; border-radius: 15px; border: 1px solid #eee; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; text-align: left; }
+        .prog-bg { background: #f1f2f6; border-radius: 10px; height: 12px; width: 100%; margin: 12px 0; }
+        .prog-fill { background: #09a338; height: 100%; border-radius: 10px; }
+        .btn-dark { background: #2c3e50; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+        .del-btn { color: #2c3e50; cursor: pointer; font-weight: bold; font-size: 1.2rem; margin-left: 10px; border: none; background: none; }
+    </style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div style="font-size: 1.5rem;">🎓 <b>StudentBudget</b></div>
+    <div class="nav-links">
+        <button class="nav-btn" onclick="window.location.href='student.html'">Dashboard</button>
+        <button class="nav-btn active">Goals</button>
+    </div>
+</nav>
+
+<div class="dashboard-grid">
+    <div class="dash-card">
+        <h3>💰 Available Money</h3>
+        <div class="available-amt" id="availableDisplay">₹0.00</div>
+    </div>
+    <div class="dash-card">
+        <h3>🎯 Start New Goal</h3>
+        <input type="text" id="gName" placeholder="Goal Name" style="width:100%;">
+        <input type="number" id="gTarget" placeholder="Target Amount" style="width:100%;">
+        <input type="number" id="gInitial" placeholder="Initial Savings" style="width:100%;">
+        <button class="btn-dark" style="width:100%; margin-top:10px;" onclick="createGoal()">Create Goal</button>
+    </div>
+</div>
+
+<div class="goals-container">
+    <h3 style="text-align: center; margin-bottom: 25px;">📊 Active Goals Progress</h3>
+    <div id="goalsList"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = "https://gutdjwkuphmlrljxskgz.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_AroUizfnqDDW9YUfxWyE3A_XMfys25o";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let balance = 0;
+
+    window.onload = refresh;
+
+    async function refresh() {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
+
+        const [prof, goals] = await Promise.all([
+            supabaseClient.from("profiles").select("final_balance").eq("id", user.id).maybeSingle(),
+            supabaseClient.from("goals").select("*").eq("user_id", user.id)
+        ]);
+
+        balance = Number(prof.data?.final_balance) || 0;
+        const disp = document.getElementById('availableDisplay');
+        disp.textContent = `₹${balance.toFixed(2)}`;
+        disp.className = balance < 0 ? "available-amt is-neg" : "available-amt";
+        
+        render(goals.data || []);
+    }
+
+    function render(goals) {
+        document.getElementById('goalsList').innerHTML = goals.map(g => {
+            const p = Math.min((g.saved / g.target) * 100, 100).toFixed(0);
+            return `
+                <div class="goal-row">
+                    <div style="width: 150px;">
+                        <b style="font-size: 1.1rem;">${g.name}</b><br>
+                        <small style="color: #666;">₹${g.saved} / ₹${g.target}</small>
+                    </div>
+                    <div style="flex:1; margin: 0 20px;">
+                        <div style="display:flex; justify-content:space-between; font-size: 0.9rem; font-weight: bold;">
+                            <span>Progress</span><span>${p}%</span>
+                        </div>
+                        <div class="prog-bg"><div class="prog-fill" style="width:${p}%"></div></div>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items: center;">
+                        <input type="number" id="add-${g.id}" placeholder="₹" style="width: 70px;">
+                        <button class="btn-dark" onclick="addMoney('${g.id}', ${g.saved})">Add</button>
+                        <button class="del-btn" onclick="deleteGoal('${g.id}')">✕</button>
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    async function addMoney(id, current) {
+        const amtInput = document.getElementById(`add-${id}`);
+        const amt = Number(amtInput.value) || 0;
+        if (amt <= 0) return;
+        if (amt > balance) return alert("Not enough available money!");
+        
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        await supabaseClient.from("goals").update({ saved: current + amt }).eq("id", id);
+        await supabaseClient.from("profiles").update({ final_balance: balance - amt }).eq("id", user.id);
+        
+        refresh();
+    }
+
+    async function deleteGoal(id) {
+        if (!confirm("Are you sure you want to delete this goal?")) return;
+        await supabaseClient.from("goals").delete().eq("id", id);
+        refresh();
+    }
+
+    async function createGoal() {
+        const n = document.getElementById('gName').value;
+        const t = Number(document.getElementById('gTarget').value);
+        const i = Number(document.getElementById('gInitial').value) || 0;
+        
+        if (!n || !t) return alert("Please enter goal name and target.");
+        
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        await supabaseClient.from("goals").insert([{ user_id: user.id, name: n, target: t, saved: i }]);
+        
+        if (i > 0) {
+            await supabaseClient.from("profiles").update({ final_balance: balance - i }).eq("id", user.id);
+        }
+        
+        refresh();
+    }
+</script>
+</body>
+</html>
+
+
+

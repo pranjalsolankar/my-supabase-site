@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Business Goals</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .progress-container { background: #dfe4ea; border-radius: 10px; height: 12px; margin-top: 10px; width: 100%; overflow: hidden; }
+        .progress-bar { background: #f1c40f; height: 100%; width: 0%; transition: width 0.5s ease; }
+        .goal-item { padding: 20px; background: #fff; margin-bottom: 15px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .goal-header { display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body class="dashboard-body">
+
+<nav class="top-nav">
+    <div class="logo">🏢 BizTracker</div>
+    <div class="nav-links">
+        <button onclick="window.location.href='business.html'">Dashboard</button>
+        <button class="active">Goals</button>
+        <button onclick="handleLogout()" class="btn-logout">Logout</button>
+    </div>
+</nav>
+
+<h1 class="page-title" style="text-align:center; margin: 25px 0;">Business Investment Goals</h1>
+
+<div class="dashboard-grid">
+    <div class="dash-card">
+        <h3>💰 Retained Profit</h3>
+        <h2 id="availableMoneyDisplay" style="color: #2f3542; font-size: 2.5rem; margin: 15px 0;">₹0.00</h2>
+        <p class="muted">Net profit available for reinvestment after all costs and reserves.</p>
+    </div>
+
+    <div class="dash-card">
+        <h3>🚀 Expansion Goal</h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <input type="text" id="goalName" placeholder="Goal (e.g., New Equipment)">
+            <input type="number" id="goalAmount" placeholder="Target Amount (₹)">
+            <input type="number" id="useAmount" placeholder="Invest Now (₹)">
+            <button class="btn-primary" style="background:#f39c12;" onclick="handleGoalSubmit()">Set Goal</button>
+        </div>
+    </div>
+
+    <div class="dash-card" style="grid-column: 1 / -1;">
+        <h3>📊 Business Growth Progress</h3>
+        <div id="goalsList" style="margin-top:15px;"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://gutdjwkuphmlrljxskgz.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_AroUizfnqDDW9YUfxWyE3A_XMfys25o";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentAvailable = 0;
+
+window.onload = async () => {
+    // Session check to prevent the "Login First" error screen
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { 
+        alert("Please login first"); 
+        window.location.href = "index.html"; 
+        return; 
+    }
+    await refreshData();
+};
+
+async function refreshData() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    
+    // Fetch live data to calculate available profit
+    const { data: profile } = await supabaseClient.from("profiles").select("*").eq("id", user.id).single();
+    const { data: expenses } = await supabaseClient.from("expenses").select("amount").eq("user_id", user.id);
+    const { data: goals } = await supabaseClient.from("goals").select("saved").eq("user_id", user.id);
+
+    const revenue = Number(profile?.monthly_income || 0);
+    const reserves = Number(profile?.emergency_budget || 0);
+    const totalExp = expenses?.reduce((sum, e) => sum + Number(e.amount || 0), 0) || 0;
+    const totalGoalSaved = goals?.reduce((sum, g) => sum + Number(g.saved || 0), 0) || 0;
+
+    // Calculation logic matching your Dashboard
+    currentAvailable = revenue - reserves - totalExp - totalGoalSaved;
+    document.getElementById("availableMoneyDisplay").textContent = `₹${currentAvailable.toFixed(2)}`;
+    
+    await loadGoals(user.id);
+}
+
+async function handleGoalSubmit() {
+    const name = document.getElementById("goalName").value.trim();
+    const target = parseFloat(document.getElementById("goalAmount").value) || 0;
+    const saveNow = parseFloat(document.getElementById("useAmount").value) || 0;
+
+    if (!name || target <= 0) return alert("Enter expansion goal name and target.");
+    if (saveNow > currentAvailable) return alert("Insufficient profit to fund this goal!");
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    
+    await supabaseClient.from("goals").insert({
+        user_id: user.id, name: name, target: target, saved: saveNow, portal: "business"
+    });
+
+    document.getElementById("goalName").value = '';
+    document.getElementById("goalAmount").value = '';
+    document.getElementById("useAmount").value = '';
+    await refreshData();
+}
+
+async function loadGoals(userId) {
+    const { data: goals } = await supabaseClient.from("goals").select("*").eq("user_id", userId);
+    const list = document.getElementById("goalsList");
+    list.innerHTML = '';
+    
+    if (goals) {
+        goals.forEach(goal => {
+            const pct = Math.min((goal.saved / goal.target) * 100, 100).toFixed(0);
+            const div = document.createElement("div");
+            div.className = "goal-item";
+            div.innerHTML = `
+                <div class="goal-header">
+                    <strong>${goal.name}</strong>
+                    <button onclick="deleteGoal('${goal.id}')" style="color:red; background:none; border:none; cursor:pointer;">✕</button>
+                </div>
+                <div class="progress-container"><div class="progress-bar" style="width: ${pct}%"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size: 0.85rem; margin-top: 8px;">
+                    <span>Invested: ₹${goal.saved}</span>
+                    <span>Target: ₹${goal.target} (${pct}%)</span>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
+}
+
+async function deleteGoal(id) {
+    if(!confirm("Cancel this expansion goal?")) return;
+    await supabaseClient.from("goals").delete().eq("id", id);
+    await refreshData();
+}
+
+async function handleLogout() {
+    await supabaseClient.auth.signOut();
+    window.location.href = "index.html";
+}
+</script>
+</body>
+</html>
+
+
+
+
+
+
