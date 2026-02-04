@@ -6,5 +6,8 @@
       "destination": "/welcome.html",
       "permanent": false
     }
+  ],
+  "rewrites": [
+    { "source": "/login", "destination": "/index.html" }
   ]
 }
